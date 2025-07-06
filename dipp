@@ -1,414 +1,601 @@
-//////// 2D Linear Convolution ////////
-code:
-clc; 
-x =[1 ,2 ,3;4 ,5 ,6;7 ,8 ,9]; 
-h = [1 ,1;1 ,1;1 ,1]; 
-y = conv2(x,h); 
-disp(y,'Linear 2D convolution y='); 
-////////// Circular Convolution //////
-clc ; 
-x = input("Enter the values of x(n)"); 
-h = input("Enter the values of h(n)"); 
-X = fft2(x); 
-H = fft2(h); 
-Y = X.*H; 
-y = ifft(Y); 
-disp (y, 'Circular Convolution Result y = '); 
-/////////// Circular Convolution expressed as linear convolution plus alias ///
-clc ; 
-x = [1 ,2;3 ,4]; 
-h = [5 ,6;7 ,8]; 
-y = conv2 (x,h); 
-y1 = [y(:,1)+y(:,$),y(:,2)]; 
-y2 = [y1(1,:)+y1($,:);y1(2,:)]; 
-disp(y,'Linear Convolution Result y ='); 
-disp(y2,'Circular Convolution Expressed as Linear Convolution plus alias = ');
-///////Linear Cross Correlation of a 2D matrix////////
-clc ; 
-x = [3 ,1;2 ,4]; 
-h1 = [1 ,5;2 ,3]; 
-h2 = h1 (:,$ : -1:1); 
-h = h2($: -1:1 ,:); 
-y = conv2 (x,h); 
-disp(y, "Linear Cross Correlation Result y = ");
-/////Circular Correlation between two signals////
-clc ; 
-x = [1 ,5;2 ,4]; 
-h = [3 ,2;4 ,1]; 
-h = h(:,$ : -1:1) ; 
-h = h($: -1:1 ,:); 
-X = fft2 (x); 
-H = fft2 (h); 
-Y = X.*H; 
-y = ifft (Y); 
-disp(y, "Circular Correlation Result y = ");
-/////Linear auto Correlation of a 2D matrix/////////
-clc ; 
-x1 = [1 ,1;1 ,1]; 
-x2 = x1 (:,$ : -1:1); 
-x2 = x2($: -1:1 ,:); 
-x = conv2 (x1 ,x2); 
-disp(x, "Linear auto Correlation Result x = ");
-///////DFT of 4x4 gray scale image. /////
-clc ; 
-f = [1 ,1 ,1 ,1;1 ,1 ,1 ,1;1 ,1 ,1 ,1;1 ,1 ,1 ,1]; 
-t = fft2(f); 
-disp(t, "2D DFT of given 2D image = ");
-////////Discrete Cosine transform of an image ////////
-//OS: Windows 7
-//Scilab Version: Scilab 5.4.1
-//one dimensional cosine transform
-clc; 
-clear all; 
-//f=[1 2 4 7]; //Input: A row matrix 
-//Input ex. f=[1 2 4 7]
-N=4;//finding length ofinput sequence
-F=zeros(1,N);//cosine transform of input
-//C=zeros(N,N);
-for k=1:N 
- for n=1:N 
- if (k-1)==0 
- C(k,n)=inv(sqrt(N)); //cosine transform matrix 
- else 
- C(k,n)=sqrt(2)*inv(sqrt(N))*cos(%pi*(2*(n-1)+1)*(k-1)/(2*N)); 
- end 
- disp(C(k,n)); 
- end 
-end 
-//////KL transform for the given 2D matrix////////
-clear ; 
-clc ; 
-X = [4 ,3 ,5 ,6;4 ,2 ,7 ,7;5 ,5 ,6 ,7]; 
-//X=[4 -2; -1 3];
-[m , n ]= size (X) ; 
-A = [0]; 
-E = [0]; 
-for i =1: n 
- A= A + X (: , i ) ; 
- E= E + X (: , i ) * X (: , i)'; 
-end
-mx = A / n ; //mean ma t ri x
-E = E / n; 
-C = E - mx * mx '; // c o v a r i a n c e ma t ri x C = E[ xx ’] −mx∗mx’ 
-[V , D ] = spec ( C ) ; // e i g e n v a l u e s and e i g e n v e c t o r s
-d = diag ( D ) ; // d i a g o n a l e l e m e n t s od e i g e n v a l u e s
-disp(d) 
-[d , i ] = gsort ( d ) ; // s o r t i n g t h e e l e m e n t s of D i n d e s c e n d i n g o r d e r
- for j = 1: length (d ) 
- T (: , j )= V (: , i ( j ) ) ; 
- end 
-T = T' 
-disp (d , ' Eig e n Val u e s a r e U = ' ) 
-disp (T , ' The e i g e n v e c t o r ma t ri x T = ' ) 
-disp (T , ' The KL t r a nf o rm b a s i s i s = ' ) 
-//KL t r a n sf o r m
-for i = 1: n 
- Y (: , i )= T * X (: , i ) ; 
-end 
-disp (Y , 'KL t r a n s f o r m a t i o n of t h e i n p u t ma t ri x Y = ' ) 
-// R e c o n s t r u c t i o n
-for i = 1: n 
- x (: , i )= T'* Y (: , i ) ; 
-end 
-disp (x , ' R e c o n s t r u c t ma t ri x of t h e g i v e n sam pl e ma t ri x X = ' )
-////////Brightness enhancement of an image/////////
-clc; 
-a = imread ("C:\Users\sushil\Downloads\children_bag.jpg"); 
-b = double (a) +50; 
-b = uint8 (b); 
-figure (1) 
-imshow (uint8(a)); 
-title ( ' Original Image ' ) 
-figure (2) 
-imshow (uint8(b)); 
-title ( ' Enhanced Image ' )
-/////Contrast Manipulation /////////
-clc ; 
-close ; 
-a = imread ("C:\Users\sushil\Downloads\children_bag.jpg"); 
-a = rgb2gray (a); 
-b = double (a) *0.5; 
-b = uint8 (b); 
-c = double (b) *2.5; 
-c = uint8 (c); 
-figure (1) 
-imshow(uint8(a)); 
-title ( 'Original Image' ); 
-figure (2) 
-imshow(b); 
-title ( 'Decrease in Contrast' ); 
-figure (3) 
-imshow(c); 
-title ( 'Increase in Contrast' ); 
-/////////Image Negative ////////
-clc ; 
-close ; 
-a = imread ("C:\Users\sushil\Downloads\children_bag.jpg"); 
-k = 255 - double (a); 
-k = uint8 (k); 
-figure(1); 
-imshow (uint8(a)); 
-title ( 'Original Image' ); 
-figure(2); 
-imshow (k); 
-title ( 'Negative of Original Image' ); 
-//////////Perform threshold operation//////////
-clc ; 
-a = imread ("C:\Users\sushil\Downloads\children_bag.jpg"); 
-a = rgb2gray (a); 
-[m n] = size (a); 
-t = input("Enter the threshold parameter "); 
-for i = 1:m 
- for j = 1:n 
- if(a(i,j)<t) 
- b(i,j)=0; 
- else 
- b(i,j) =255; 
- end 
- end 
-end 
-figure (1) 
-imshow(uint8(a)); 
-title ( ' Original Image ' ) 
-figure (2) 
-imshow(uint8(b)); 
-title ( ' Thresholded Image ' ) 
-xlabel ( sprintf ( 'Threshold Value is %g ' ,t)) 
-/////////Perform gray level slicing without background////////
-clc ; 
-x = imread ("C:\Users\sushil\Downloads\children_bag.jpg"); 
-x = rgb2gray(x); 
-y = double(x); 
-[m n] = size(y); 
-L = max(x); 
-a = round(L/2); 
-b = L; 
-for i =1: m 
- for j =1: n 
- if(y(i,j) >=a & y(i,j) <=b) 
- z(i,j) = L; 
- else 
- z(i,j)=0; 
- end 
- end 
-end 
-z = uint8 (z); 
-figure (1) 
-imshow(x) 
-title ( ' Orginal Image ' ) 
-figure (2) 
-imshow(z); 
-title ( 'Gray Level Slicing without preserving background ' ) 
-////////// Image Segmentation.////////
-sigma=input(' Enter the value of sigma : ') 
-i= -10:.1:10; 
-j= -10:.1:10; 
-r=sqrt(i.*i+j.*j); 
-y=(1/( sigma ^2))*(((r.*r)/sigma ^2) -1).*exp(-r.*r/2*sigma ^2); 
-plot(i,y) 
-legend(sprintf(' The sigma value is %g ',sigma)) 
-xtitle(' Differentiation of Gaussian function ') 
-////////Shape of DOG Filter /////////
-sigma1 =input(' Enter the value of sigma1 : ') 
-sigma2 =input(' Enter the value of sigma2 : ') 
-i= -10:.1:10; 
-j= -10:.1:10; 
-r=sqrt(i.*i+j.*j); 
-y1 = (1/( sigma1 ^2))*(((r.*r)/sigma1 ^2) -1).*exp(-r.*r/2* sigma1 ^2); 
-y2 = (1/( sigma2 ^2))*(((r.*r)/sigma2 ^2) -1).*exp(-r.*r/2* sigma2 ^2); 
-y = y1 -y2; 
-plot(i,y) 
-xtitle(' Shape of DOG Filter ') 
-//////////Edge Detection///////
-img = imread("D:\\Picture1.png"); 
-img=rgb2gray(img); 
-c=edge(img,'sobel',0.5) 
-d=edge(img,'prewitt') 
-e=edge(img,'canny') 
-f=edge(img,'log') 
-figure(1) 
-imshow(img) 
-title('Original Image') 
-figure(2) 
-imshow(c) 
-title('Sobel') 
-figure(3) 
-imshow(d) 
-title('Prewitt') 
-figure(4) 
-imshow(e) 
-title('Canny') 
-figure(5) 
-imshow(f) 
-title('LOG')
-//////////Image Compression/////////
-clc; 
-clear all; 
-n=input("Enter the no. of symbols : "); 
-for i = 1:n 
- printf("\nEnter the probability(<=1) of symbol %d: ",i);//Input: Taking the probability of occurence
-p(i)=input(""); 
-end 
-printf("\nThe cdf of symbol 1: %.3f ",p(1)); 
-c(1)=p(1); 
-for i = 2:n 
- c(i)=p(i)+c(i-1); 
- printf("\nThe cdf of symbol %d: ",i); 
- printf("%.3f",c(i)); 
-end 
-s=input("Enter the no. of symbols in sequence");/ 
-printf("Enter the sequence "); 
-for j = 1:s 
-b(j)=input("");//Inserting the sequence
-end 
-//Setting the lower and upper limit for 1st stage
-if b(1) == 1 then 
-l(1)=0; 
-u(1)=c(b(1));
-else 
-l(1)=c(b(1)-1); 
-u(1)=c(b(1)); 
-end 
-//Calculating lower and upper limits for 2nd stage and ahead
-for k = 2:s 
-if b(k) == 1 then 
-l(k)=l(k-1); 
-u(k)=l(k-1)+((u(k-1)-l(k-1))*c(b(k))); 
-else 
-l(k)=l(k-1)+((u(k-1)-l(k-1))*c(b(k)-1)); 
-u(k)=l(k-1)+((u(k-1)-l(k-1))*c(b(k))); 
-end 
-end 
-tag=(l(s)+u(s))/2;//Generating tag
-printf("The tag of the sequence is= %.10f",tag);//Output: The tag of the sequence
-//Output for ex tag=0.1375781250
-Output: 
-Note: for inputs refer the solved example of DIP book page 457 
-Enter the no. of symbols : 4 
-Enter the probability(<=1) of symbol 1: 
---> 0.4 
-Enter the probability(<=1) of symbol 2:
-Enter the probability(<=1) of symbol 3:
---> 0.1 
-Enter the probability(<=1) of symbol 4: 
---> 0.3 
-The cdf of symbol 1: 0.400 
-The cdf of symbol 2: 0.600 
-The cdf of symbol 3: 0.700 
-The cdf of symbol 4: 1.000 
-Enter the no. of symbols in sequence3 
-Enter the sequence 
---> 4 
---> 1 
---> 4 
-The tag of the sequence is= 0.8020000000 
-///////Run length Coding ///////
-clc; 
-clear; 
-close; 
-in=input('Enter squares matrix::::'); 
-[m,n]=size(in); 
-y=0; 
-tx(1)=0; 
-o=1 
-for j=1:m
-for k=1:n 
- x=in(j,k); 
- if x==y 
- tx(o)=tx(o)+1; 
- else 
- o=o+1; 
- tx(o)=1; 
- end 
- y=x; 
- end 
-end 
-disp('code sucsess'); 
-disp(tx);
-//////// Binary Image Processing-Dilation and Erosion/////////
-a=imread('D:\\Picture1.png'); 
-//se=CreateStructureElement('square',3);
-se=imcreatese('cross',3,3); 
-a1=imdilate(a,se); 
-a2=imerode(a,se); 
-figure(1) 
-imshow(a); 
-title('Original Image'); 
-figure(2) 
-imshow(a1); 
-title('Dilated Image'); 
-figure(3) 
-imshow(a2); 
-title('Eroded Image'); 
-//////////Binary Image Processing-Opening and closing////////
-a=imread('D:\\Picture1.png'); 
-//se=CreateStructureElement('square',3);
-se=imcreatese('rect',3,3); 
-//Code for Closeing image
-a1=imdilate(a,se); 
-a2=imerode(a1,se); 
-figure(1) 
-imshow(a); 
-title('Original Image'); 
-figure(2) 
-imshow(a2); 
-title('Closed Image'); 
-//Code for Opening image
-a1=imerode(a,se); 
-a2=imdilate(a1,se); 
-figure(3) 
-imshow(a2); 
-title('Opened Image'); 
-/////////Colour Image processing/////////
-img=imread('D:\\Picture1.png'); 
-histB=calcHist(img,0,[],1,32,[0 256]); 
-scf(); 
-bar(histB(:),'blue'); 
-histG=calcHist(img,1,[],1,32,[0 256]); 
-scf(); 
-bar(histG(:),'blue'); 
-histR=calcHist(img,2,[],1,32,[0 256]); 
-scf(); 
-bar(histB(:),'red'); 
-///////////'Histogram equalised Image///////
-a=imread('D:\\Picture1.png'); 
-b=rgb2ntsc(a); 
-b(:,:,1)=imhistequal(b(:,:,1)); 
-c=ntsc2rgb(b); 
-figure(1) 
-imshow(a) 
-title('Original Image') 
-figure(2) 
-imshow(c) 
-title('Histogram equalised Image')
-RGB=imread('D:\\Picture1.png'); 
-a1=RGB; 
-a2=RGB; 
-a3=RGB; 
-a1(:,:,1)=0; 
-a2(:,:,2)=0; 
-a3(:,:,3)=0; 
-figure(1) 
-imshow(RGB) 
-title('Original Image') 
-figure(2) 
-imshow(a1) 
-title('Image with separating Red Component') 
-figure(3) 
-imshow(a2) 
-title('Image with separating Green Component') 
-figure(4) 
-imshow(a3) 
-title('Image with separating Blue Component') 
-///////Histogram of gray image /////////
-a=imread('D:\\Picture1.png'); 
-[count1, cells]=imhist(a(:,:)); 
-figure(1);plot(count1) 
-b=imhistequal(a(:,:)) 
-figure(2) 
-imshow(b) 
-figure(3) 
-imshow(a) 
-title('Original Image') 
-[count, cells]=imhist(b(:,:)); 
-figure(4);plot(count) 
+#1Implement a Basic Neural Network in TensorFlow 
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+
+# Load the MNIST dataset
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# Normalize the data (scale pixel values to [0, 1])
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# One-hot encode the labels
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+# Build the model
+model = Sequential([
+    Flatten(input_shape=(28, 28)),        # Input layer to flatten the 28x28 images
+    Dense(128, activation='relu'),        # Hidden layer with 128 neurons and ReLU activation
+    Dense(10, activation='softmax')       # Output layer for 10 classes (digits 0-9)
+])
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+model.fit(x_train, y_train, epochs=5, batch_size=32)
+
+# Evaluate the model
+loss, accuracy = model.evaluate(x_test, y_test)
+print(f'Test accuracy: {accuracy:.4f}')
+
+
+#2:Implement CNN with Keras for image classification 
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.utils import to_categorical
+
+# Load CIFAR-10 dataset
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+# Normalize pixel values
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# One-hot encode labels
+y_train = to_categorical(y_train, 10)
+y_test = to_categorical(y_test, 10)
+
+# Build the CNN model
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', padding='same', input_shape=(32,32,3)),
+    MaxPooling2D(pool_size=(2,2)),
+    Conv2D(64, (3,3), activation='relu', padding='same'),
+    MaxPooling2D(pool_size=(2,2)),
+    Conv2D(128, (3,3), activation='relu', padding='same'),
+    MaxPooling2D(pool_size=(2,2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.3),
+    Dense(10, activation='softmax')
+])
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.1)
+
+# Evaluate performance
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print(f"\nTest accuracy: {test_acc:.4f}")
+
+#3 Implement ResNet in PyTorch 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1, downsample=None):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride, 1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.downsample = downsample
+
+    def forward(self, x):
+        identity = x
+        if self.downsample:
+            identity = self.downsample(x)
+
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out += identity
+        return F.relu(out)
+
+class ResNet18(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.in_channels = 64
+        self.conv1 = nn.Conv2d(3, 64, 7, 2, 3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU()
+        self.maxpool = nn.MaxPool2d(3, 2, 1)
+
+        self.layer1 = self._make_layer(64, 2)
+        self.layer2 = self._make_layer(128, 2, stride=2)
+        self.layer3 = self._make_layer(256, 2, stride=2)
+        self.layer4 = self._make_layer(512, 2, stride=2)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512, num_classes)
+
+    def _make_layer(self, out_channels, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.in_channels != out_channels:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.in_channels, out_channels, 1, stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+
+        layers = [ResidualBlock(self.in_channels, out_channels, stride, downsample)]
+        self.in_channels = out_channels
+        for _ in range(1, blocks):
+            layers.append(ResidualBlock(out_channels, out_channels))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        return self.fc(x)
+
+
+#4 Implement RNN for Time Series Prediction 
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
+
+# Generate synthetic time series data (sine wave)
+def generate_series(n=1000):
+    x = np.arange(n)
+    return np.sin(0.02 * x) + np.random.normal(0, 0.1, n)
+
+series = generate_series()
+scaler = MinMaxScaler()
+series_scaled = scaler.fit_transform(series.reshape(-1, 1))
+
+# Prepare dataset
+def create_dataset(series, window_size):
+    X, y = [], []
+    for i in range(len(series) - window_size):
+        X.append(series[i:i+window_size])
+        y.append(series[i+window_size])
+    return np.array(X), np.array(y)
+
+window_size = 20
+X, y = create_dataset(series_scaled, window_size)
+X = X.reshape((X.shape[0], X.shape[1], 1))  # reshape for RNN
+
+# Build the RNN model using LSTM
+model = Sequential([
+    LSTM(50, activation='tanh', input_shape=(window_size, 1)),
+    Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse')
+
+# Train the model
+model.fit(X, y, epochs=20, batch_size=32)
+
+# Forecast the next value
+last_window = series_scaled[-window_size:].reshape(1, window_size, 1)
+predicted = model.predict(last_window)
+predicted_value = scaler.inverse_transform(predicted)
+
+print(f"Next predicted value: {predicted_value[0][0]:.4f}")
+
+
+#5 Implement LSTM for Sequence Generation 
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.utils import to_categorical
+
+# Example corpus
+text = "hello world hello world hello world"
+chars = sorted(list(set(text)))
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for c, i in char_to_idx.items()}
+
+# Convert text to sequences
+seq_length = 5
+X = []
+y = []
+
+for i in range(len(text) - seq_length):
+    input_seq = text[i:i + seq_length]
+    target_char = text[i + seq_length]
+    X.append([char_to_idx[ch] for ch in input_seq])
+    y.append(char_to_idx[target_char])
+
+X = np.array(X)
+y = to_categorical(y, num_classes=len(chars))
+
+# Reshape input for LSTM [samples, time steps, features]
+X = X.reshape((X.shape[0], X.shape[1], 1)) / float(len(chars))  # Normalize
+
+# Define the LSTM model
+model = Sequential([
+    LSTM(128, input_shape=(seq_length, 1)),
+    Dense(len(chars), activation='softmax')
+])
+
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+model.fit(X, y, epochs=50, verbose=2)
+
+# Generate sequence
+seed = "hello"
+generated = seed
+for _ in range(50):
+    seed_input = np.array([[char_to_idx[c] for c in seed[-seq_length:]]]).reshape((1, seq_length, 1)) / float(len(chars))
+    pred = model.predict(seed_input, verbose=0)
+    next_char = idx_to_char[np.argmax(pred)]
+    generated += next_char
+    seed += next_char
+
+print("Generated sequence:\n", generated)
+
+
+#6 Implement GRU-based model for Sentiment Analysis 
+import tensorflow as tf
+from tensorflow.keras.datasets import imdb
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, Dense, Dropout
+
+# Load IMDB dataset
+vocab_size = 10000  # Use top 10,000 words
+max_len = 200       # Max sequence length
+
+(x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=vocab_size)
+
+# Pad sequences for uniform input size
+x_train = pad_sequences(x_train, maxlen=max_len)
+x_test = pad_sequences(x_test, maxlen=max_len)
+
+
+#7 Implement Autoencoders in TensorFlow 
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Flatten, Reshape
+from tensorflow.keras.datasets import mnist
+
+# Load MNIST dataset
+(x_train, _), (x_test, _) = mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize
+x_train = x_train.reshape(-1, 28*28)
+x_test = x_test.reshape(-1, 28*28)
+
+# Define dimensions
+input_dim = 784
+encoding_dim = 64  # Size of encoded representation
+
+# Build encoder
+input_img = Input(shape=(input_dim,))
+encoded = Dense(encoding_dim, activation='relu')(input_img)
+
+# Build decoder
+decoded = Dense(input_dim, activation='sigmoid')(encoded)
+
+# Autoencoder model
+autoencoder = Model(input_img, decoded)
+
+# Compile model
+autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
+
+# Train model
+autoencoder.fit(x_train, x_train,
+                epochs=20,
+                batch_size=256,
+                shuffle=True,
+                validation_data=(x_test, x_test))
+
+# Encode and decode test images
+encoded_imgs = autoencoder.predict(x_test)
+
+# Example output: original vs reconstructed
+import matplotlib.pyplot as plt
+
+n = 10
+plt.figure(figsize=(20, 4))
+for i in range(n):
+    # Original
+    ax = plt.subplot(2, n, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    plt.axis('off')
+
+    # Reconstructed
+    ax = plt.subplot(2, n, i + 1 + n)
+    plt.imshow(encoded_imgs[i].reshape(28, 28), cmap='gray')
+    plt.axis('off')
+plt.show()
+
+
+#8 Implement Variational Autoencoder (VAE) to generate new images
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, losses, Model
+from tensorflow.keras.datasets import mnist
+import matplotlib.pyplot as plt
+
+# Load and preprocess MNIST
+(x_train, _), (x_test, _) = mnist.load_data()
+x_train = x_train.astype("float32") / 255.0
+x_train = np.reshape(x_train, (-1, 28, 28, 1))
+
+latent_dim = 2  # for easy visualization
+
+# Encoder
+class Sampling(layers.Layer):
+    def call(self, inputs):
+        z_mean, z_log_var = inputs
+        eps = tf.random.normal(shape=tf.shape(z_mean))
+        return z_mean + tf.exp(0.5 * z_log_var) * eps
+
+encoder_inputs = layers.Input(shape=(28, 28, 1))
+x = layers.Flatten()(encoder_inputs)
+x = layers.Dense(128, activation='relu')(x)
+z_mean = layers.Dense(latent_dim)(x)
+z_log_var = layers.Dense(latent_dim)(x)
+z = Sampling()([z_mean, z_log_var])
+encoder = Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
+
+# Decoder
+latent_inputs = layers.Input(shape=(latent_dim,))
+x = layers.Dense(128, activation='relu')(latent_inputs)
+x = layers.Dense(28 * 28, activation='sigmoid')(x)
+decoder_outputs = layers.Reshape((28, 28, 1))(x)
+decoder = Model(latent_inputs, decoder_outputs, name="decoder")
+
+# VAE model
+class VAE(Model):
+    def __init__(self, encoder, decoder, **kwargs):
+        super().__init__(**kwargs)
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def train_step(self, data):
+        if isinstance(data, tuple):
+            data = data[0]
+        with tf.GradientTape() as tape:
+            z_mean, z_log_var, z = self.encoder(data)
+            reconstruction = self.decoder(z)
+            reconstruction_loss = tf.reduce_mean(
+                tf.reduce_sum(losses.binary_crossentropy(data, reconstruction), axis=(1, 2))
+            )
+            kl_loss = -0.5 * tf.reduce_mean(
+                tf.reduce_sum(1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), axis=1)
+            )
+            total_loss = reconstruction_loss + kl_loss
+        grads = tape.gradient(total_loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        return {"loss": total_loss}
+
+vae = VAE(encoder, decoder)
+vae.compile(optimizer='adam')
+vae.fit(x_train, epochs=30, batch_size=128)
+
+# Sample new points in latent space
+n = 15
+grid_x = np.linspace(-2, 2, n)
+grid_y = np.linspace(-2, 2, n)
+
+digit_size = 28
+canvas = np.zeros((digit_size * n, digit_size * n))
+
+for i, yi in enumerate(grid_x):
+    for j, xi in enumerate(grid_y):
+        z_sample = np.array([[xi, yi]])
+        x_decoded = decoder.predict(z_sample)
+        digit = x_decoded[0].reshape(digit_size, digit_size)
+        canvas[i * digit_size:(i + 1) * digit_size,
+               j * digit_size:(j + 1) * digit_size] = digit
+
+plt.figure(figsize=(10, 10))
+plt.imshow(canvas, cmap='gray')
+plt.axis('off')
+plt.title('Generated Digits from VAE Latent Space')
+plt.show()
+
+
+#10 Apply BERT for Text Classification 
+!pip install transformers datasets
+from transformers import BertTokenizer, TFBertForSequenceClassification
+from transformers import DataCollatorWithPadding
+from datasets import load_dataset
+import tensorflow as tf
+
+# Load dataset (e.g., IMDb reviews)
+dataset = load_dataset("imdb")
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# Tokenize function
+def tokenize_function(example):
+    return tokenizer(example["text"], truncation=True)
+
+tokenized = dataset.map(tokenize_function, batched=True)
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors="tf")
+
+# Prepare TensorFlow datasets
+tf_train = tokenized["train"].to_tf_dataset(
+    columns=["input_ids", "attention_mask"],
+    label_cols=["label"],
+    shuffle=True,
+    batch_size=16,
+    collate_fn=data_collator
+)
+
+tf_test = tokenized["test"].to_tf_dataset(
+    columns=["input_ids", "attention_mask"],
+    label_cols=["label"],
+    shuffle=False,
+    batch_size=16,
+    collate_fn=data_collator
+)
+
+# Load BERT model
+model = TFBertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)
+
+# Compile
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=5e-5),
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+# Train
+model.fit(tf_train, validation_data=tf_test, epochs=2)
+
+
+
+#11 Implement a GAN to generate images. 
+import tensorflow as tf
+from tensorflow.keras import layers
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load and preprocess MNIST
+(x_train, _), _ = tf.keras.datasets.mnist.load_data()
+x_train = x_train.reshape(-1, 28, 28, 1).astype("float32")
+x_train = (x_train - 127.5) / 127.5  # Normalize to [-1, 1]
+
+BUFFER_SIZE = 60000
+BATCH_SIZE = 256
+
+train_dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+# Generator
+def build_generator():
+    model = tf.keras.Sequential([
+        layers.Dense(7*7*256, use_bias=False, input_shape=(100,)),
+        layers.BatchNormalization(),
+        layers.LeakyReLU(),
+
+        layers.Reshape((7, 7, 256)),
+        layers.Conv2DTranspose(128, (5,5), strides=(1,1), padding='same', use_bias=False),
+        layers.BatchNormalization(),
+        layers.LeakyReLU(),
+
+        layers.Conv2DTranspose(64, (5,5), strides=(2,2), padding='same', use_bias=False),
+        layers.BatchNormalization(),
+        layers.LeakyReLU(),
+
+        layers.Conv2DTranspose(1, (5,5), strides=(2,2), padding='same', use_bias=False, activation='tanh')
+    ])
+    return model
+
+# Discriminator
+def build_discriminator():
+    model = tf.keras.Sequential([
+        layers.Conv2D(64, (5,5), strides=(2,2), padding='same', input_shape=[28, 28, 1]),
+        layers.LeakyReLU(),
+        layers.Dropout(0.3),
+
+        layers.Conv2D(128, (5,5), strides=(2,2), padding='same'),
+        layers.LeakyReLU(),
+        layers.Dropout(0.3),
+
+        layers.Flatten(),
+        layers.Dense(1)
+    ])
+    return model
+def generate_and_plot():
+    noise = tf.random.normal([16, 100])
+    gen_images = generator(noise, training=False)
+
+    fig = plt.figure(figsize=(4, 4))
+    for i in range(gen_images.shape[0]):
+        plt.subplot(4, 4, i+1)
+        plt.imshow((gen_images[i, :, :, 0] + 1) / 2.0, cmap='gray')
+        plt.axis('off')
+    plt.show()
+    # Training loop
+def train(dataset, epochs):
+    for epoch in range(epochs):
+        print(f"Epoch {epoch+1}/{epochs}")
+        for image_batch in dataset:
+            train_step(image_batch)
+    print("Training complete.")
+
+# Example usage
+train(train_dataset, epochs=50)
+generate_and_plot()
+
+
+#12 Implement Deep Q-Network 
+import numpy as np
+import gym
+import random
+from collections import deque
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+
+# Create the environment
+env = gym.make("CartPole-v1")
+state_shape = env.observation_space.shape[0]
+num_actions = env.action_space.n
+
+# DQN hyperparameters
+gamma = 0.99        # Discount factor
+epsilon = 1.0       # Exploration rate
+epsilon_min = 0.01
+epsilon_decay = 0.995
+learning_rate = 0.001
+batch_size = 64
+memory = deque(maxlen=2000)
+
+# Build the Q-network
+model = Sequential([
+    Dense(24, activation='relu', input_shape=(state_shape,)),
+    Dense(24, activation='relu'),
+    Dense(num_actions, activation='linear')
+])
+model.compile(loss='mse', optimizer=Adam(learning_rate=learning_rate))
+
+# Choose action using epsilon-greedy policy
+def act(state):
+    if np.random.rand() <= epsilon:
+        return random.randrange(num_actions)
+    q_values = model.predict(state, verbose=0)
+    return np.argmax(q_values[0])
+
+# Replay experience
+def replay():
+    global epsilon
+    if len(memory) < batch_size:
+        return
+    minibatch = random.sample(memory, batch_size)
+    for state, action, reward, next_state, done in minibatch:
+        target = reward
+        if not done:
+            target += gamma * np.amax(model.predict(next_state, verbose=0)[0])
+        target_f = model.predict(state, verbose=0)
+        target_f[0][action] = target
+        model.fit(state, target_f, epochs=1, verbose=0)
+    if epsilon > epsilon_min:
+        epsilon *= epsilon_decay
+
+# Training loop
+episodes = 500
+for e in range(episodes):
+    state = env.reset()
+    state = np.reshape(state, [1, state_shape])
+    for time_t in range(500):
+        action = act(state)
+        next_state, reward, done, _ = env.step(action)
+        reward = reward if not done else -10
+        next_state = np.reshape(next_state, [1, state_shape])
+        memory.append((state, action, reward, next_state, done))
+        state = next_state
+        if done:
+            print(f"Episode {e+1}/{episodes}, Score: {time_t}, Epsilon: {epsilon:.2f}")
+            break
+    replay()
