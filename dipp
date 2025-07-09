@@ -1,1432 +1,213 @@
-1. Matrix Operations and Differentiation
-Matrix Operations
-pythonimport numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import minimize
-import warnings
-warnings.filterwarnings('ignore')
+Here's the code for each practical, provided separately and clearly numbered:
 
-# Basic matrix operations
-def matrix_operations_demo():
-    A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    B = np.array([[9, 8, 7], [6, 5, 4], [3, 2, 1]])
-    
-    print("Matrix A:")
-    print(A)
-    print("\nMatrix B:")
-    print(B)
-    
-    # Matrix multiplication
-    C = np.dot(A, B)
-    print("\nA × B:")
-    print(C)
-    
-    # Matrix inverse (using pseudo-inverse for singular matrices)
-    A_inv = np.linalg.pinv(A)
-    print("\nPseudo-inverse of A:")
-    print(A_inv)
-    
-    # Eigenvalues and eigenvectors
-    eigenvals, eigenvecs = np.linalg.eig(A)
-    print("\nEigenvalues:")
-    print(eigenvals)
-    
-    return A, B, C
-
-# Vector and matrix differentiation
-def vector_differentiation():
-    # Gradient of a quadratic function f(x) = x^T A x + b^T x + c
-    def quadratic_gradient(x, A, b):
-        return 2 * np.dot(A, x) + b
-    
-    # Hessian of a quadratic function
-    def quadratic_hessian(A):
-        return 2 * A
-    
-    # Example
-    A = np.array([[2, 1], [1, 2]])
-    b = np.array([1, 1])
-    x = np.array([1, 2])
-    
-    grad = quadratic_gradient(x, A, b)
-    hess = quadratic_hessian(A)
-    
-    print("Gradient at x =", x, ":", grad)
-    print("Hessian matrix:")
-    print(hess)
-    
-    return grad, hess
-
-# Run demonstrations
-A, B, C = matrix_operations_demo()
-grad, hess = vector_differentiation()
-Practical Exercise
-
-Implement matrix chain multiplication optimization
-Calculate gradients for common loss functions (MSE, cross-entropy)
-Compute Jacobian matrices for multivariate functions
-
-
-2. Integration of Vectors and Matrices
-Numerical Integration
-pythonfrom scipy.integrate import quad, dblquad
-import numpy as np
-
-def vector_integration():
-    # Vector function integration
-    def vector_function(t):
-        return np.array([np.sin(t), np.cos(t), t**2])
-    
-    # Numerical integration of vector function
-    def integrate_vector_function(func, a, b, n_points=1000):
-        t = np.linspace(a, b, n_points)
-        dt = (b - a) / n_points
-        values = np.array([func(ti) for ti in t])
-        return np.sum(values, axis=0) * dt
-    
-    # Example: integrate from 0 to π
-    result = integrate_vector_function(vector_function, 0, np.pi)
-    print("Vector integration result:", result)
-    
-    return result
-
-def matrix_integration():
-    # Matrix function integration
-    def matrix_function(t):
-        return np.array([[np.sin(t), np.cos(t)], 
-                        [t, t**2]])
-    
-    # Integrate matrix function
-    def integrate_matrix_function(func, a, b, n_points=1000):
-        t = np.linspace(a, b, n_points)
-        dt = (b - a) / n_points
-        values = np.array([func(ti) for ti in t])
-        return np.sum(values, axis=0) * dt
-    
-    result = integrate_matrix_function(matrix_function, 0, 1)
-    print("Matrix integration result:")
-    print(result)
-    
-    return result
-
-# Run demonstrations
-vec_result = vector_integration()
-mat_result = matrix_integration()
-
-3. Simplex Algorithm and Duality
-Simplex Algorithm Implementation
-pythonimport numpy as np
-
-class SimplexSolver:
-    def __init__(self, c, A, b):
-        """
-        Solve: maximize c^T x subject to Ax <= b, x >= 0
-        """
-        self.c = np.array(c)
-        self.A = np.array(A)
-        self.b = np.array(b)
-        self.m, self.n = A.shape
-        
-    def solve(self):
-        # Convert to standard form
-        # Add slack variables
-        tableau = self.create_initial_tableau()
-        
-        iteration = 0
-        while not self.is_optimal(tableau):
-            pivot_col = self.find_pivot_column(tableau)
-            pivot_row = self.find_pivot_row(tableau, pivot_col)
-            
-            if pivot_row == -1:
-                return None, "Unbounded solution"
-            
-            tableau = self.pivot(tableau, pivot_row, pivot_col)
-            iteration += 1
-            
-            if iteration > 100:  # Prevent infinite loops
-                return None, "Max iterations reached"
-        
-        return self.extract_solution(tableau), "Optimal solution found"
-    
-    def create_initial_tableau(self):
-        # Create initial simplex tableau
-        tableau = np.zeros((self.m + 1, self.n + self.m + 1))
-        
-        # Add constraint coefficients
-        tableau[:-1, :self.n] = self.A
-        
-        # Add slack variables (identity matrix)
-        tableau[:-1, self.n:self.n + self.m] = np.eye(self.m)
-        
-        # Add RHS
-        tableau[:-1, -1] = self.b
-        
-        # Add objective function (negated for maximization)
-        tableau[-1, :self.n] = -self.c
-        
-        return tableau
-    
-    def is_optimal(self, tableau):
-        return all(tableau[-1, :-1] >= 0)
-    
-    def find_pivot_column(self, tableau):
-        return np.argmin(tableau[-1, :-1])
-    
-    def find_pivot_row(self, tableau, pivot_col):
-        ratios = []
-        for i in range(self.m):
-            if tableau[i, pivot_col] > 0:
-                ratios.append(tableau[i, -1] / tableau[i, pivot_col])
-            else:
-                ratios.append(float('inf'))
-        
-        min_ratio = min(ratios)
-        if min_ratio == float('inf'):
-            return -1
-        
-        return ratios.index(min_ratio)
-    
-    def pivot(self, tableau, pivot_row, pivot_col):
-        # Normalize pivot row
-        tableau[pivot_row] /= tableau[pivot_row, pivot_col]
-        
-        # Eliminate other entries in pivot column
-        for i in range(len(tableau)):
-            if i != pivot_row:
-                tableau[i] -= tableau[i, pivot_col] * tableau[pivot_row]
-        
-        return tableau
-    
-    def extract_solution(self, tableau):
-        solution = np.zeros(self.n)
-        for j in range(self.n):
-            col = tableau[:-1, j]
-            if np.sum(col == 1) == 1 and np.sum(col == 0) == self.m - 1:
-                row = np.where(col == 1)[0][0]
-                solution[j] = tableau[row, -1]
-        
-        return solution
-
-# Example usage
-def simplex_example():
-    # Maximize 3x1 + 2x2 subject to:
-    # x1 + x2 <= 4
-    # 2x1 + x2 <= 6
-    # x1, x2 >= 0
-    
-    c = [3, 2]  # Objective coefficients
-    A = [[1, 1], [2, 1]]  # Constraint matrix
-    b = [4, 6]  # RHS vector
-    
-    solver = SimplexSolver(c, A, b)
-    solution, status = solver.solve()
-    
-    print("Status:", status)
-    if solution is not None:
-        print("Optimal solution:", solution)
-        print("Optimal value:", np.dot(c, solution))
-    
-    return solution
-
-solution = simplex_example()
-
-4. Newton's Method Implementation
-Newton's Method for Root Finding and Optimization
-pythonimport numpy as np
-import matplotlib.pyplot as plt
-
-def newton_method_1d(f, df, x0, tol=1e-6, max_iter=100):
-    """
-    Newton's method for finding roots of f(x) = 0
-    """
-    x = x0
-    for i in range(max_iter):
-        fx = f(x)
-        dfx = df(x)
-        
-        if abs(fx) < tol:
-            return x, i
-        
-        if abs(dfx) < tol:
-            print("Derivative too small")
-            return None, i
-        
-        x = x - fx / dfx
-    
-    return x, max_iter
-
-def newton_method_optimization(f, df, ddf, x0, tol=1e-6, max_iter=100):
-    """
-    Newton's method for optimization (finding critical points)
-    """
-    x = x0
-    for i in range(max_iter):
-        dfx = df(x)
-        ddfx = ddf(x)
-        
-        if abs(dfx) < tol:
-            return x, i
-        
-        if abs(ddfx) < tol:
-            print("Second derivative too small")
-            return None, i
-        
-        x = x - dfx / ddfx
-    
-    return x, max_iter
-
-def newton_method_multivariate(gradient, hessian, x0, tol=1e-6, max_iter=100):
-    """
-    Newton's method for multivariate optimization
-    """
-    x = np.array(x0)
-    for i in range(max_iter):
-        grad = gradient(x)
-        hess = hessian(x)
-        
-        if np.linalg.norm(grad) < tol:
-            return x, i
-        
-        try:
-            direction = np.linalg.solve(hess, -grad)
-            x = x + direction
-        except np.linalg.LinAlgError:
-            print("Singular Hessian matrix")
-            return None, i
-    
-    return x, max_iter
-
-# Example applications
-def newton_examples():
-    # 1. Root finding example: f(x) = x^2 - 2
-    def f(x):
-        return x**2 - 2
-    
-    def df(x):
-        return 2*x
-    
-    root, iterations = newton_method_1d(f, df, 1.0)
-    print(f"Root of x^2 - 2 = 0: {root} (iterations: {iterations})")
-    
-    # 2. Optimization example: minimize f(x) = x^4 - 3x^2 + 2
-    def f_opt(x):
-        return x**4 - 3*x**2 + 2
-    
-    def df_opt(x):
-        return 4*x**3 - 6*x
-    
-    def ddf_opt(x):
-        return 12*x**2 - 6
-    
-    minimum, iterations = newton_method_optimization(f_opt, df_opt, ddf_opt, 1.0)
-    print(f"Minimum of x^4 - 3x^2 + 2: x = {minimum} (iterations: {iterations})")
-    
-    # 3. Multivariate example: minimize f(x,y) = x^2 + y^2 - 2x - 4y + 5
-    def gradient(x):
-        return np.array([2*x[0] - 2, 2*x[1] - 4])
-    
-    def hessian(x):
-        return np.array([[2, 0], [0, 2]])
-    
-    minimum, iterations = newton_method_multivariate(gradient, hessian, [0, 0])
-    print(f"Minimum of x^2 + y^2 - 2x - 4y + 5: {minimum} (iterations: {iterations})")
-
-newton_examples()
-
-5. Secant Method Implementation
-Secant Method for Root Finding
-pythonimport numpy as np
-
-def secant_method(f, x0, x1, tol=1e-6, max_iter=100):
-    """
-    Secant method for finding roots of f(x) = 0
-    """
-    for i in range(max_iter):
-        fx0 = f(x0)
-        fx1 = f(x1)
-        
-        if abs(fx1) < tol:
-            return x1, i
-        
-        if abs(fx1 - fx0) < tol:
-            print("Function values too close")
-            return None, i
-        
-        # Secant formula
-        x_new = x1 - fx1 * (x1 - x0) / (fx1 - fx0)
-        
-        # Update points
-        x0, x1 = x1, x_new
-    
-    return x1, max_iter
-
-def secant_method_optimization(df, x0, x1, tol=1e-6, max_iter=100):
-    """
-    Secant method for optimization (finding critical points)
-    """
-    for i in range(max_iter):
-        dfx0 = df(x0)
-        dfx1 = df(x1)
-        
-        if abs(dfx1) < tol:
-            return x1, i
-        
-        if abs(dfx1 - dfx0) < tol:
-            print("Derivative values too close")
-            return None, i
-        
-        # Secant formula applied to derivative
-        x_new = x1 - dfx1 * (x1 - x0) / (dfx1 - dfx0)
-        
-        # Update points
-        x0, x1 = x1, x_new
-    
-    return x1, max_iter
-
-def multivariate_secant(gradient, x0, x1, tol=1e-6, max_iter=100):
-    """
-    Multivariate secant method (Broyden's method)
-    """
-    x_curr = np.array(x1)
-    x_prev = np.array(x0)
-    
-    # Initialize Jacobian approximation
-    B = np.eye(len(x0))
-    
-    for i in range(max_iter):
-        g_curr = gradient(x_curr)
-        
-        if np.linalg.norm(g_curr) < tol:
-            return x_curr, i
-        
-        # Solve B * s = -g for step s
-        try:
-            s = np.linalg.solve(B, -g_curr)
-        except np.linalg.LinAlgError:
-            print("Singular Jacobian approximation")
-            return None, i
-        
-        x_new = x_curr + s
-        g_new = gradient(x_new)
-        
-        # Update Jacobian approximation (Broyden's update)
-        y = g_new - g_curr
-        if np.dot(s, s) > tol:
-            B = B + np.outer(y - np.dot(B, s), s) / np.dot(s, s)
-        
-        x_prev, x_curr = x_curr, x_new
-    
-    return x_curr, max_iter
-
-# Example applications
-def secant_examples():
-    # 1. Root finding example: f(x) = x^3 - 2x - 5
-    def f(x):
-        return x**3 - 2*x - 5
-    
-    root, iterations = secant_method(f, 2.0, 2.5)
-    print(f"Root of x^3 - 2x - 5 = 0: {root} (iterations: {iterations})")
-    
-    # 2. Optimization example: minimize f(x) = x^4 - 3x^2 + 2
-    def df(x):
-        return 4*x**3 - 6*x
-    
-    minimum, iterations = secant_method_optimization(df, 1.0, 1.5)
-    print(f"Critical point of x^4 - 3x^2 + 2: x = {minimum} (iterations: {iterations})")
-    
-    # 3. Multivariate example
-    def gradient(x):
-        return np.array([2*x[0] - 2, 2*x[1] - 4])
-    
-    minimum, iterations = multivariate_secant(gradient, [0, 0], [1, 1])
-    print(f"Minimum using multivariate secant: {minimum} (iterations: {iterations})")
-
-secant_examples()
-
-6. Lagrange Multiplier Method
-Lagrange Multipliers for Constrained Optimization
-pythonimport numpy as np
-from scipy.optimize import minimize
-
-def lagrange_multiplier_method(objective, constraints, x0, method='trust-constr'):
-    """
-    Solve constrained optimization using Lagrange multipliers
-    """
-    result = minimize(objective, x0, method=method, constraints=constraints)
-    return result
-
-def lagrange_analytical_example():
-    """
-    Analytical solution for simple constrained optimization
-    """
-    # Minimize f(x,y) = x^2 + y^2 subject to g(x,y) = x + y - 1 = 0
-    
-    # Using method of Lagrange multipliers:
-    # ∇f = λ∇g
-    # 2x = λ, 2y = λ, x + y = 1
-    # Therefore: x = y = 1/2, λ = 1
-    
-    print("Analytical solution:")
-    print("x = 0.5, y = 0.5, λ = 1.0")
-    print("Minimum value: 0.5")
-    
-    return np.array([0.5, 0.5]), 1.0
-
-def lagrange_numerical_example():
-    """
-    Numerical solution using scipy.optimize
-    """
-    # Objective function: f(x,y) = x^2 + y^2
-    def objective(x):
-        return x[0]**2 + x[1]**2
-    
-    # Constraint: g(x,y) = x + y - 1 = 0
-    def constraint(x):
-        return x[0] + x[1] - 1
-    
-    # Define constraint dictionary
-    cons = {'type': 'eq', 'fun': constraint}
-    
-    # Initial guess
-    x0 = [0, 0]
-    
-    # Solve
-    result = minimize(objective, x0, method='SLSQP', constraints=cons)
-    
-    print("\nNumerical solution:")
-    print(f"x = {result.x}")
-    print(f"Minimum value: {result.fun}")
-    print(f"Lagrange multiplier: {result.get('fun')}")
-    
-    return result
-
-def inequality_constrained_example():
-    """
-    Example with inequality constraints
-    """
-    # Minimize f(x,y) = (x-1)^2 + (y-1)^2
-    # Subject to: g1(x,y) = x + y - 2 <= 0
-    #            g2(x,y) = -x <= 0
-    #            g3(x,y) = -y <= 0
-    
-    def objective(x):
-        return (x[0] - 1)**2 + (x[1] - 1)**2
-    
-    def constraint1(x):
-        return x[0] + x[1] - 2
-    
-    def constraint2(x):
-        return -x[0]
-    
-    def constraint3(x):
-        return -x[1]
-    
-    cons = [{'type': 'ineq', 'fun': lambda x: -constraint1(x)},
-            {'type': 'ineq', 'fun': lambda x: -constraint2(x)},
-            {'type': 'ineq', 'fun': lambda x: -constraint3(x)}]
-    
-    x0 = [0.5, 0.5]
-    result = minimize(objective, x0, method='SLSQP', constraints=cons)
-    
-    print("\nInequality constrained optimization:")
-    print(f"x = {result.x}")
-    print(f"Minimum value: {result.fun}")
-    
-    return result
-
-# Run examples
-analytical_sol, lambda_val = lagrange_analytical_example()
-numerical_result = lagrange_numerical_example()
-inequality_result = inequality_constrained_example()
-
-7. KKT Theorem Implementation
-Karush-Kuhn-Tucker (KKT) Conditions
-pythonimport numpy as np
-from scipy.optimize import minimize
-
-class KKTSolver:
-    def __init__(self, objective, grad_objective, hess_objective, 
-                 eq_constraints=None, ineq_constraints=None):
-        self.objective = objective
-        self.grad_objective = grad_objective
-        self.hess_objective = hess_objective
-        self.eq_constraints = eq_constraints or []
-        self.ineq_constraints = ineq_constraints or []
-    
-    def check_kkt_conditions(self, x, lambda_eq=None, mu_ineq=None):
-        """
-        Check if KKT conditions are satisfied
-        """
-        # Stationarity condition
-        grad_L = self.grad_objective(x)
-        
-        # Add equality constraint gradients
-        if lambda_eq is not None:
-            for i, (constraint, grad_constraint) in enumerate(self.eq_constraints):
-                grad_L += lambda_eq[i] * grad_constraint(x)
-        
-        # Add inequality constraint gradients
-        if mu_ineq is not None:
-            for i, (constraint, grad_constraint) in enumerate(self.ineq_constraints):
-                grad_L += mu_ineq[i] * grad_constraint(x)
-        
-        stationarity = np.linalg.norm(grad_L)
-        
-        # Primal feasibility
-        eq_feasibility = []
-        if self.eq_constraints:
-            eq_feasibility = [constraint(x) for constraint, _ in self.eq_constraints]
-        
-        ineq_feasibility = []
-        if self.ineq_constraints:
-            ineq_feasibility = [constraint(x) for constraint, _ in self.ineq_constraints]
-        
-        # Dual feasibility (mu >= 0)
-        dual_feasibility = True
-        if mu_ineq is not None:
-            dual_feasibility = all(mu >= -1e-6 for mu in mu_ineq)
-        
-        # Complementary slackness
-        comp_slackness = True
-        if mu_ineq is not None and self.ineq_constraints:
-            for i, (constraint, _) in enumerate(self.ineq_constraints):
-                if abs(mu_ineq[i] * constraint(x)) > 1e-6:
-                    comp_slackness = False
-                    break
-        
-        return {
-            'stationarity': stationarity,
-            'eq_feasibility': eq_feasibility,
-            'ineq_feasibility': ineq_feasibility,
-            'dual_feasibility': dual_feasibility,
-            'complementary_slackness': comp_slackness
-        }
-
-def kkt_example():
-    """
-    Example: Minimize f(x,y) = x^2 + y^2 - 2x - 4y
-    Subject to: g(x,y) = x + y - 3 <= 0
-               x >= 0, y >= 0
-    """
-    
-    # Define functions
-    def objective(x):
-        return x[0]**2 + x[1]**2 - 2*x[0] - 4*x[1]
-    
-    def grad_objective(x):
-        return np.array([2*x[0] - 2, 2*x[1] - 4])
-    
-    def hess_objective(x):
-        return np.array([[2, 0], [0, 2]])
-    
-    # Constraints
-    def constraint1(x):  # x + y - 3 <= 0
-        return x[0] + x[1] - 3
-    
-    def grad_constraint1(x):
-        return np.array([1, 1])
-    
-    def constraint2(x):  # -x <= 0 (x >= 0)
-        return -x[0]
-    
-    def grad_constraint2(x):
-        return np.array([-1, 0])
-    
-    def constraint3(x):  # -y <= 0 (y >= 0)
-        return -x[1]
-    
-    def grad_constraint3(x):
-        return np.array([0, -1])
-    
-    # Set up KKT solver
-    ineq_constraints = [
-        (constraint1, grad_constraint1),
-        (constraint2, grad_constraint2),
-        (constraint3, grad_constraint3)
-    ]
-    
-    kkt_solver = KKTSolver(objective, grad_objective, hess_objective,
-                          ineq_constraints=ineq_constraints)
-    
-    # Solve using scipy
-    cons = [{'type': 'ineq', 'fun': lambda x: -constraint1(x)},
-            {'type': 'ineq', 'fun': lambda x: -constraint2(x)},
-            {'type': 'ineq', 'fun': lambda x: -constraint3(x)}]
-    
-    result = minimize(objective, [0, 0], method='SLSQP', constraints=cons)
-    
-    print("KKT Example Solution:")
-    print(f"Optimal point: {result.x}")
-    print(f"Optimal value: {result.fun}")
-    
-    # Check KKT conditions (approximate multipliers)
-    mu_ineq = [0.5, 0, 0]  # These would be computed from the solver
-    kkt_check = kkt_solver.check_kkt_conditions(result.x, mu_ineq=mu_ineq)
-    
-    print("\nKKT Conditions Check:")
-    for condition, value in kkt_check.items():
-        print(f"{condition}: {value}")
-    
-    return result, kkt_check
-
-# Run KKT example
-result, kkt_check = kkt_example()
-
-8. BFGS Method Implementation
-Broyden-Fletcher-Goldfarb-Shanno (BFGS) Algorithm
-pythonimport numpy as np
-from scipy.optimize import minimize
-
-def bfgs_algorithm(objective, gradient, x0, tol=1e-6, max_iter=100):
-    """
-    BFGS algorithm implementation
-    """
-    x = np.array(x0)
-    n = len(x)
-    
-    # Initialize inverse Hessian approximation
-    H = np.eye(n)
-    
-    for i in range(max_iter):
-        grad = gradient(x)
-        
-        # Check convergence
-        if np.linalg.norm(grad) < tol:
-            return x, i
-        
-        # Compute search direction
-        p = -np.dot(H, grad)
-        
-        # Line search (simple backtracking)
-        alpha = line_search(objective, x, p, grad)
-        
-        # Update x
-        x_new = x + alpha * p
-        grad_new = gradient(x_new)
-        
-        # BFGS update
-        s = x_new - x
-        y = grad_new - grad
-        
-        # Check if update is valid
-        if np.dot(s, y) > 1e-10:
-            rho = 1.0 / np.dot(s, y)
-            V = np.eye(n) - rho * np.outer(s, y)
-            H = np.dot(V.T, np.dot(H, V)) + rho * np.outer(s, s)
-        
-        x = x_new
-    
-    return x, max_iter
-
-def line_search(objective, x, p, grad, alpha0=1.0, c1=1e-4, max_iter=20):
-    """
-    Backtracking line search
-    """
-    alpha = alpha0
-    
-    for i in range(max_iter):
-        if objective(x + alpha * p) <= objective(x) + c1 * alpha * np.dot(grad, p):
-            return alpha
-        alpha *= 0.5
-    
-    return alpha
-
-def limited_memory_bfgs(objective, gradient, x0, m=10, tol=1e-6, max_iter=100):
-    """
-    Limited-memory BFGS (L-BFGS) implementation
-    """
-    x = np.array(x0)
-    n = len(x)
-    
-    # Storage for limited memory
-    s_history = []
-    y_history = []
-    
-    for i in range(max_iter):
-        grad = gradient(x)
-        
-        # Check convergence
-        if np.linalg.norm(grad) < tol:
-            return x, i
-        
-        # Compute search direction using two-loop recursion
-        q = grad.copy()
-        alpha_history = []
-        
-        # First loop (backward)
-        for j in range(len(s_history) - 1, -1, -1):
-            alpha = np.dot(s_history[j], q) / np.dot(s_history[j], y_history[j])
-            alpha_history.append(alpha)
-            q -= alpha * y_history[j]
-        
-        # Scale
-        if len(s_history) > 0:
-            gamma = np.dot(s_history[-1], y_history[-1]) / np.dot(y_history[-1], y_history[-1])
-            r = gamma * q
-        else:
-            r = q
-        
-        # Second loop (forward)
-        alpha_history.reverse()
-        for j in range(len(s_history)):
-            beta = np.dot(y_history[j], r) / np.dot(s_history[j], y_history[j])
-            r += s_history[j] * (alpha_history[j] - beta)
-        
-        p = -r
-        
-        # Line search
-        alpha = line_search(objective, x, p, grad)
-# Update x
-        x_new = x + alpha * p
-        grad_new = gradient(x_new)
-        
-        # Update history
-        s = x_new - x
-        y = grad_new - grad
-        
-        if np.dot(s, y) > 1e-10:
-            s_history.append(s)
-            y_history.append(y)
-            
-            # Keep only m recent updates
-            if len(s_history) > m:
-                s_history.pop(0)
-                y_history.pop(0)
-        
-        x = x_new
-    
-    return x, max_iter
-
-def bfgs_examples():
-    """
-    Examples of BFGS optimization
-    """
-    # Example 1: Rosenbrock function
-    def rosenbrock(x):
-        return 100 * (x[1] - x[0]**2)**2 + (1 - x[0])**2
-    
-    def rosenbrock_grad(x):
-        return np.array([
-            -400 * x[0] * (x[1] - x[0]**2) - 2 * (1 - x[0]),
-            200 * (x[1] - x[0]**2)
-        ])
-    
-    # BFGS
-    x_bfgs, iter_bfgs = bfgs_algorithm(rosenbrock, rosenbrock_grad, [-1.2, 1.0])
-    print("BFGS Result:")
-    print(f"Optimum: {x_bfgs}")
-    print(f"Iterations: {iter_bfgs}")
-    print(f"Function value: {rosenbrock(x_bfgs)}")
-    
-    # L-BFGS
-    x_lbfgs, iter_lbfgs = limited_memory_bfgs(rosenbrock, rosenbrock_grad, [-1.2, 1.0])
-    print("\nL-BFGS Result:")
-    print(f"Optimum: {x_lbfgs}")
-    print(f"Iterations: {iter_lbfgs}")
-    print(f"Function value: {rosenbrock(x_lbfgs)}")
-    
-    # Scipy comparison
-    result_scipy = minimize(rosenbrock, [-1.2, 1.0], method='BFGS', jac=rosenbrock_grad)
-    print("\nSciPy BFGS Result:")
-    print(f"Optimum: {result_scipy.x}")
-    print(f"Iterations: {result_scipy.nit}")
-    print(f"Function value: {result_scipy.fun}")
-    
-    return x_bfgs, x_lbfgs, result_scipy
 
 ---
 
-## 9. Particle Swarm Optimization
+Practical 1: Web Scraping Court Case Summaries
 
-### PSO Algorithm Implementation
-```python
-import numpy as np
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+url = 'https://www.indiankanoon.org/search/?formInput=section%20378'
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+summaries = []
+for div in soup.find_all('div', class_='result_title'):
+    link = 'https://www.indiankanoon.org' + div.a['href']
+    title = div.text.strip()
+    summaries.append({'Title': title, 'Link': link})
+
+df = pd.DataFrame(summaries)
+df.to_csv('court_case_summaries.csv', index=False)
+
+
+---
+
+Practical 2: EDA on Legal Case Dataset
+
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
-class ParticleSwarmOptimizer:
-    def __init__(self, objective_function, dim, bounds, n_particles=30, 
-                 w=0.729, c1=1.49445, c2=1.49445, max_iter=100):
-        """
-        Particle Swarm Optimization
-        
-        Parameters:
-        - objective_function: function to minimize
-        - dim: dimension of the problem
-        - bounds: list of (min, max) tuples for each dimension
-        - n_particles: number of particles
-        - w: inertia weight
-        - c1: cognitive parameter
-        - c2: social parameter
-        - max_iter: maximum iterations
-        """
-        self.objective_function = objective_function
-        self.dim = dim
-        self.bounds = bounds
-        self.n_particles = n_particles
-        self.w = w
-        self.c1 = c1
-        self.c2 = c2
-        self.max_iter = max_iter
-        
-        # Initialize particles
-        self.particles = np.random.uniform(
-            low=[b[0] for b in bounds],
-            high=[b[1] for b in bounds],
-            size=(n_particles, dim)
-        )
-        
-        # Initialize velocities
-        self.velocities = np.random.uniform(
-            low=-1, high=1, size=(n_particles, dim)
-        )
-        
-        # Initialize personal best positions and values
-        self.personal_best_pos = self.particles.copy()
-        self.personal_best_val = np.array([
-            self.objective_function(p) for p in self.particles
-        ])
-        
-        # Initialize global best
-        best_idx = np.argmin(self.personal_best_val)
-        self.global_best_pos = self.personal_best_pos[best_idx].copy()
-        self.global_best_val = self.personal_best_val[best_idx]
-        
-        # History for tracking
-        self.history = []
-    
-    def optimize(self):
-        """
-        Run the PSO algorithm
-        """
-        for iteration in range(self.max_iter):
-            for i in range(self.n_particles):
-                # Update velocity
-                r1, r2 = np.random.random(2)
-                
-                cognitive = self.c1 * r1 * (self.personal_best_pos[i] - self.particles[i])
-                social = self.c2 * r2 * (self.global_best_pos - self.particles[i])
-                
-                self.velocities[i] = (self.w * self.velocities[i] + 
-                                    cognitive + social)
-                
-                # Update position
-                self.particles[i] += self.velocities[i]
-                
-                # Apply bounds
-                for j in range(self.dim):
-                    if self.particles[i][j] < self.bounds[j][0]:
-                        self.particles[i][j] = self.bounds[j][0]
-                        self.velocities[i][j] = 0
-                    elif self.particles[i][j] > self.bounds[j][1]:
-                        self.particles[i][j] = self.bounds[j][1]
-                        self.velocities[i][j] = 0
-                
-                # Evaluate fitness
-                fitness = self.objective_function(self.particles[i])
-                
-                # Update personal best
-                if fitness < self.personal_best_val[i]:
-                    self.personal_best_val[i] = fitness
-                    self.personal_best_pos[i] = self.particles[i].copy()
-                
-                # Update global best
-                if fitness < self.global_best_val:
-                    self.global_best_val = fitness
-                    self.global_best_pos = self.particles[i].copy()
-            
-            # Record history
-            self.history.append(self.global_best_val)
-            
-            # Optional: early stopping
-            if self.global_best_val < 1e-10:
-                break
-        
-        return self.global_best_pos, self.global_best_val
+df = pd.read_csv('legal_cases.csv')  # Assume file is prepared
 
-def pso_examples():
-    """
-    Examples using PSO
-    """
-    # Example 1: Sphere function
-    def sphere(x):
-        return np.sum(x**2)
-    
-    bounds = [(-5, 5)] * 2
-    pso = ParticleSwarmOptimizer(sphere, 2, bounds)
-    best_pos, best_val = pso.optimize()
-    
-    print("PSO - Sphere Function:")
-    print(f"Best position: {best_pos}")
-    print(f"Best value: {best_val}")
-    
-    # Example 2: Rosenbrock function
-    def rosenbrock(x):
-        return 100 * (x[1] - x[0]**2)**2 + (1 - x[0])**2
-    
-    bounds = [(-2, 2), (-1, 3)]
-    pso_rosen = ParticleSwarmOptimizer(rosenbrock, 2, bounds, max_iter=200)
-    best_pos_rosen, best_val_rosen = pso_rosen.optimize()
-    
-    print("\nPSO - Rosenbrock Function:")
-    print(f"Best position: {best_pos_rosen}")
-    print(f"Best value: {best_val_rosen}")
-    
-    # Example 3: Rastrigin function (multimodal)
-    def rastrigin(x):
-        A = 10
-        n = len(x)
-        return A * n + np.sum(x**2 - A * np.cos(2 * np.pi * x))
-    
-    bounds = [(-5.12, 5.12)] * 2
-    pso_rast = ParticleSwarmOptimizer(rastrigin, 2, bounds, n_particles=50)
-    best_pos_rast, best_val_rast = pso_rast.optimize()
-    
-    print("\nPSO - Rastrigin Function:")
-    print(f"Best position: {best_pos_rast}")
-    print(f"Best value: {best_val_rast}")
-    
-    # Plot convergence
-    plt.figure(figsize=(12, 4))
-    
-    plt.subplot(1, 3, 1)
-    plt.plot(pso.history)
-    plt.title('Sphere Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.subplot(1, 3, 2)
-    plt.plot(pso_rosen.history)
-    plt.title('Rosenbrock Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.subplot(1, 3, 3)
-    plt.plot(pso_rast.history)
-    plt.title('Rastrigin Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.tight_layout()
-    plt.show()
-    
-    return (best_pos, best_val), (best_pos_rosen, best_val_rosen), (best_pos_rast, best_val_rast)
+print(df.describe())
+print(df.mode())
 
-# Run PSO examples
-pso_results = pso_examples()
+sns.countplot(data=df, x='Case_Outcome')
+plt.title('Distribution of Case Outcomes')
+plt.show()
 
-10. Flower Pollination Algorithm
-FPA Implementation
-pythonimport numpy as np
+sns.countplot(data=df, x='Case_Type')
+plt.title('Frequency of Case Types')
+plt.xticks(rotation=90)
+plt.show()
+
+
+---
+
+Practical 3: Text Preprocessing
+
+import nltk
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.corpus import stopwords
+import re
+
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+text = "The petitioner was charged under section 420. The case was dismissed."
+
+tokens = word_tokenize(text)
+sentences = sent_tokenize(text)
+
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+processed = [lemmatizer.lemmatize(stemmer.stem(w.lower())) for w in tokens if w.isalpha() and w.lower() not in stop_words]
+print(processed)
+
+
+---
+
+Practical 4: Sentiment Analysis
+
+from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+text = "The judge ruled in favor of the defendant, citing insufficient evidence."
+
+# TextBlob
+blob = TextBlob(text)
+print("TextBlob Sentiment:", blob.sentiment)
+
+# VADER
+analyzer = SentimentIntensityAnalyzer()
+vader_score = analyzer.polarity_scores(text)
+print("VADER Sentiment:", vader_score)
+
+
+---
+
+Practical 5: ML Model for Case Outcome
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+
+df = pd.read_csv('legal_cases.csv')
+le = LabelEncoder()
+df['Outcome'] = le.fit_transform(df['Outcome'])
+X = df[['Feature1', 'Feature2']]  # Replace with actual features
+y = df['Outcome']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+model = LogisticRegression()
+model.fit(X_train, y_train)
+pred = model.predict(X_test)
+
+print(classification_report(y_test, pred))
+
+
+---
+
+Practical 6: Clustering Legal Documents
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-class FlowerPollinationAlgorithm:
-    def __init__(self, objective_function, dim, bounds, n_flowers=25, 
-                 p=0.8, gamma=1.0, lambda_val=1.5, max_iter=100):
-        """
-        Flower Pollination Algorithm
-        
-        Parameters:
-        - objective_function: function to minimize
-        - dim: dimension of the problem
-        - bounds: list of (min, max) tuples for each dimension
-        - n_flowers: number of flowers (population size)
-        - p: probability of global pollination
-        - gamma: scaling factor for Lévy flight
-        - lambda_val: parameter for Lévy flight
-        - max_iter: maximum iterations
-        """
-        self.objective_function = objective_function
-        self.dim = dim
-        self.bounds = bounds
-        self.n_flowers = n_flowers
-        self.p = p
-        self.gamma = gamma
-        self.lambda_val = lambda_val
-        self.max_iter = max_iter
-        
-        # Initialize flower population
-        self.flowers = np.random.uniform(
-            low=[b[0] for b in bounds],
-            high=[b[1] for b in bounds],
-            size=(n_flowers, dim)
-        )
-        
-        # Evaluate initial fitness
-        self.fitness = np.array([
-            self.objective_function(flower) for flower in self.flowers
-        ])
-        
-        # Find initial best solution
-        self.best_idx = np.argmin(self.fitness)
-        self.best_solution = self.flowers[self.best_idx].copy()
-        self.best_fitness = self.fitness[self.best_idx]
-        
-        # History for tracking
-        self.history = []
-    
-    def levy_flight(self, dim):
-        """
-        Generate Lévy flight step
-        """
-        # Calculate sigma
-        numerator = np.math.gamma(1 + self.lambda_val) * np.sin(np.pi * self.lambda_val / 2)
-        denominator = np.math.gamma((1 + self.lambda_val) / 2) * self.lambda_val * (2 ** ((self.lambda_val - 1) / 2))
-        sigma = (numerator / denominator) ** (1 / self.lambda_val)
-        
-        # Generate random values
-        u = np.random.normal(0, sigma, dim)
-        v = np.random.normal(0, 1, dim)
-        
-        # Calculate Lévy flight
-        step = u / (np.abs(v) ** (1 / self.lambda_val))
-        
-        return step
-    
-    def apply_bounds(self, solution):
-        """
-        Apply boundary constraints
-        """
-        for j in range(self.dim):
-            if solution[j] < self.bounds[j][0]:
-                solution[j] = self.bounds[j][0]
-            elif solution[j] > self.bounds[j][1]:
-                solution[j] = self.bounds[j][1]
-        return solution
-    
-    def optimize(self):
-        """
-        Run the Flower Pollination Algorithm
-        """
-        for iteration in range(self.max_iter):
-            for i in range(self.n_flowers):
-                # Generate random number
-                r = np.random.random()
-                
-                if r < self.p:
-                    # Global pollination (Lévy flight)
-                    L = self.levy_flight(self.dim)
-                    new_solution = (self.flowers[i] + 
-                                  self.gamma * L * (self.best_solution - self.flowers[i]))
-                else:
-                    # Local pollination
-                    # Select two random flowers
-                    j, k = np.random.choice(self.n_flowers, 2, replace=False)
-                    while j == i:
-                        j = np.random.choice(self.n_flowers)
-                    while k == i or k == j:
-                        k = np.random.choice(self.n_flowers)
-                    
-                    # Local pollination formula
-                    epsilon = np.random.random()
-                    new_solution = (self.flowers[i] + 
-                                  epsilon * (self.flowers[j] - self.flowers[k]))
-                
-                # Apply bounds
-                new_solution = self.apply_bounds(new_solution)
-                
-                # Evaluate new solution
-                new_fitness = self.objective_function(new_solution)
-                
-                # Update if better
-                if new_fitness < self.fitness[i]:
-                    self.flowers[i] = new_solution
-                    self.fitness[i] = new_fitness
-                    
-                    # Update global best
-                    if new_fitness < self.best_fitness:
-                        self.best_fitness = new_fitness
-                        self.best_solution = new_solution.copy()
-                        self.best_idx = i
-            
-            # Record history
-            self.history.append(self.best_fitness)
-            
-            # Optional: early stopping
-            if self.best_fitness < 1e-10:
-                break
-        
-        return self.best_solution, self.best_fitness
+docs = ["Document text 1...", "Document text 2...", "Document text 3..."]
 
-def fpa_examples():
-    """
-    Examples using Flower Pollination Algorithm
-    """
-    # Example 1: Sphere function
-    def sphere(x):
-        return np.sum(x**2)
-    
-    bounds = [(-5, 5)] * 2
-    fpa = FlowerPollinationAlgorithm(sphere, 2, bounds)
-    best_pos, best_val = fpa.optimize()
-    
-    print("FPA - Sphere Function:")
-    print(f"Best position: {best_pos}")
-    print(f"Best value: {best_val}")
-    
-    # Example 2: Rosenbrock function
-    def rosenbrock(x):
-        return 100 * (x[1] - x[0]**2)**2 + (1 - x[0])**2
-    
-    bounds = [(-2, 2), (-1, 3)]
-    fpa_rosen = FlowerPollinationAlgorithm(rosenbrock, 2, bounds, max_iter=200)
-    best_pos_rosen, best_val_rosen = fpa_rosen.optimize()
-    
-    print("\nFPA - Rosenbrock Function:")
-    print(f"Best position: {best_pos_rosen}")
-    print(f"Best value: {best_val_rosen}")
-    
-    # Example 3: Ackley function
-    def ackley(x):
-        a, b, c = 20, 0.2, 2 * np.pi
-        sum1 = np.sum(x**2)
-        sum2 = np.sum(np.cos(c * x))
-        return -a * np.exp(-b * np.sqrt(sum1 / len(x))) - np.exp(sum2 / len(x)) + a + np.exp(1)
-    
-    bounds = [(-32.768, 32.768)] * 2
-    fpa_ackley = FlowerPollinationAlgorithm(ackley, 2, bounds, n_flowers=30)
-    best_pos_ackley, best_val_ackley = fpa_ackley.optimize()
-    
-    print("\nFPA - Ackley Function:")
-    print(f"Best position: {best_pos_ackley}")
-    print(f"Best value: {best_val_ackley}")
-    
-    # Plot convergence
-    plt.figure(figsize=(12, 4))
-    
-    plt.subplot(1, 3, 1)
-    plt.plot(fpa.history)
-    plt.title('Sphere Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.subplot(1, 3, 2)
-    plt.plot(fpa_rosen.history)
-    plt.title('Rosenbrock Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.subplot(1, 3, 3)
-    plt.plot(fpa_ackley.history)
-    plt.title('Ackley Function Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Value')
-    plt.yscale('log')
-    
-    plt.tight_layout()
-    plt.show()
-    
-    return (best_pos, best_val), (best_pos_rosen, best_val_rosen), (best_pos_ackley, best_val_ackley)
+vectorizer = TfidfVectorizer(stop_words='english')
+X = vectorizer.fit_transform(docs)
 
-# Run FPA examples
-fpa_results = fpa_examples()
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(X)
 
-Practical Exercises and Assignments
-Exercise 1: Comparative Analysis
-Compare the performance of different optimization methods on the same problem:
-pythondef comparative_analysis():
-    """
-    Compare different optimization methods
-    """
-    # Test function: Himmelblau's function
-    def himmelblau(x):
-        return (x[0]**2 + x[1] - 11)**2 + (x[0] + x[1]**2 - 7)**2
-    
-    def himmelblau_grad(x):
-        return np.array([
-            4*x[0]*(x[0]**2 + x[1] - 11) + 2*(x[0] + x[1]**2 - 7),
-            2*(x[0]**2 + x[1] - 11) + 4*x[1]*(x[0] + x[1]**2 - 7)
-        ])
-    
-    bounds = [(-5, 5), (-5, 5)]
-    x0 = [0, 0]
-    
-    results = {}
-    
-    # Newton's method
-    try:
-        def himmelblau_hess(x):
-            return np.array([
-                [12*x[0]**2 + 4*x[1] - 42, 4*x[0] + 4*x[1]],
-                [4*x[0] + 4*x[1], 4*x[0] + 12*x[1]**2 - 26]
-            ])
-        
-        newton_result, newton_iter = newton_method_multivariate(
-            himmelblau_grad, himmelblau_hess, x0
-        )
-        results['Newton'] = (newton_result, himmelblau(newton_result), newton_iter)
-    except:
-        results['Newton'] = (None, None, None)
-    
-    # BFGS
-    try:
-        bfgs_result, bfgs_iter = bfgs_algorithm(himmelblau, himmelblau_grad, x0)
-        results['BFGS'] = (bfgs_result, himmelblau(bfgs_result), bfgs_iter)
-    except:
-        results['BFGS'] = (None, None, None)
-    
-    # PSO
-    pso = ParticleSwarmOptimizer(himmelblau, 2, bounds, max_iter=100)
-    pso_result, pso_val = pso.optimize()
-    results['PSO'] = (pso_result, pso_val, len(pso.history))
-    
-    # FPA
-    fpa = FlowerPollinationAlgorithm(himmelblau, 2, bounds, max_iter=100)
-    fpa_result, fpa_val = fpa.optimize()
-    results['FPA'] = (fpa_result, fpa_val, len(fpa.history))
-    
-    print("Comparative Analysis - Himmelblau's Function:")
-    print("=" * 50)
-    for method, (solution, value, iterations) in results.items():
-        if solution is not None:
-            print(f"{method:8s}: x = {solution}, f(x) = {value:.6f}, iter = {iterations}")
-        else:
-            print(f"{method:8s}: Failed to converge")
-    
-    return results
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X.toarray())
 
-# Run comparative analysis
-comparison_results = comparative_analysis()
-Exercise 2: Real-world Application
-Apply optimization methods to a machine learning problem:
-pythondef ml_optimization_example():
-    """
-    Apply optimization to logistic regression
-    """
-    # Generate synthetic data
-    np.random.seed(42)
-    n_samples, n_features = 100, 2
-    X = np.random.randn(n_samples, n_features)
-    true_weights = np.array([1.5, -2.0])
-    true_bias = 0.5
-    
-    # Generate labels
-    linear_combination = np.dot(X, true_weights) + true_bias
-    probabilities = 1 / (1 + np.exp(-linear_combination))
-    y = np.random.binomial(1, probabilities)
-    
-    # Add bias term to X
-    X_with_bias = np.column_stack([np.ones(n_samples), X])
-    
-    # Logistic regression cost function
-    def logistic_cost(weights):
-        z = np.dot(X_with_bias, weights)
-        predictions = 1 / (1 + np.exp(-z))
-        # Add small epsilon to avoid log(0)
-        epsilon = 1e-15
-        predictions = np.clip(predictions, epsilon, 1 - epsilon)
-        cost = -np.mean(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
-        return cost
-    
-    # Gradient of logistic cost
-    def logistic_gradient(weights):
-        z = np.dot(X_with_bias, weights)
-        predictions = 1 / (1 + np.exp(-z))
-        gradient = np.dot(X_with_bias.T, (predictions - y)) / n_samples
-        return gradient
-    
-    # Initial weights
-    w0 = np.random.randn(n_features + 1) * 0.1
-    
-    # Optimize using different methods
-    print("Logistic Regression Optimization:")
-    print("=" * 40)
-    
-    # BFGS
-    w_bfgs, iter_bfgs = bfgs_algorithm(logistic_cost, logistic_gradient, w0)
-    print(f"BFGS: weights = {w_bfgs}, cost = {logistic_cost(w_bfgs):.6f}, iter = {iter_bfgs}")
-    
-    # PSO
-    bounds = [(-5, 5)] * (n_features + 1)
-    pso_lr = ParticleSwarmOptimizer(logistic_cost, n_features + 1, bounds, max_iter=100)
-    w_pso, cost_pso = pso_lr.optimize()
-    print(f"PSO:  weights = {w_pso}, cost = {cost_pso:.6f}, iter = {len(pso_lr.history)}")
-    
-    # Compare with true weights
-    print(f"True: weights = {np.concatenate([[true_bias], true_weights])}")
-    
-    return w_bfgs, w_pso
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=kmeans.labels_)
+plt.title('KMeans Clustering of Legal Documents')
+plt.show()
 
-# Run ML optimization example
-ml_results = ml_optimization_example()
-Exercise 3: Hyperparameter Tuning
-Use metaheuristic algorithms for hyperparameter optimization:
-pythondef hyperparameter_tuning_example():
-    """
-    Use optimization for hyperparameter tuning
-    """
-    from sklearn.datasets import make_classification
-    from sklearn.model_selection import cross_val_score
-    from sklearn.ensemble import RandomForestClassifier
-    
-    # Generate dataset
-    X, y = make_classification(n_samples=1000, n_features=20, n_informative=10, 
-                              n_redundant=10, n_clusters_per_class=1, random_state=42)
-    
-    # Define hyperparameter search space
-    def evaluate_hyperparameters(params):
-        """
-        Evaluate hyperparameters using cross-validation
-        """
-        n_estimators = int(params[0])
-        max_depth = int(params[1]) if params[1] > 0 else None
-        min_samples_split = int(params[2])
-        min_samples_leaf = int(params[3])
-        
-        # Create model
-        rf = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            min_samples_split=min_samples_split,
-            min_samples_leaf=min_samples_leaf,
-            random_state=42
-        )
-        
-        # Cross-validation score (we minimize, so return negative accuracy)
-        scores = cross_val_score(rf, X, y, cv=3, scoring='accuracy')
-        return -np.mean(scores)
-    
-    # Define bounds for hyperparameters
-    bounds = [
-        (10, 100),    # n_estimators
-        (1, 20),      # max_depth
-        (2, 20),      # min_samples_split
-        (1, 10)       # min_samples_leaf
-    ]
-    
-    # PSO optimization
-    pso_hp = ParticleSwarmOptimizer(evaluate_hyperparameters, 4, bounds, 
-                                   n_particles=20, max_iter=20)
-    best_params_pso, best_score_pso = pso_hp.optimize()
-    
-    print("Hyperparameter Tuning with PSO:")
-    print("=" * 35)
-    print(f"Best parameters: n_estimators={int(best_params_pso[0])}, "
-          f"max_depth={int(best_params_pso[1])}, "
-          f"min_samples_split={int(best_params_pso[2])}, "
-          f"min_samples_leaf={int(best_params_pso[3])}")
-    print(f"Best accuracy: {-best_score_pso:.4f}")
-    
-    # FPA optimization
-    fpa_hp = FlowerPollinationAlgorithm(evaluate_hyperparameters, 4, bounds, 
-                                       n_flowers=20, max_iter=20)
-    best_params_fpa, best_score_fpa = fpa_hp.optimize()
-    
-    print("\nHyperparameter Tuning with FPA:")
-    print("=" * 35)
-    print(f"Best parameters: n_estimators={int(best_params_fpa[0])}, "
-          f"max_depth={int(best_params_fpa[1])}, "
-          f"min_samples_split={int(best_params_fpa[2])}, "
-          f"min_samples_leaf={int(best_params_fpa[3])}")
-    print(f"Best accuracy: {-best_score_fpa:.4f}")
-    
-    return best_params_pso, best_params_fpa
 
-# Run hyperparameter tuning example
-hp_results = hyperparameter_tuning_example()
+---
 
+Practical 7: Topic Modeling with LDA
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+
+documents = ["The court held...", "The plaintiff argued...", "The defendant..."]
+
+vectorizer = CountVectorizer(stop_words='english')
+doc_term_matrix = vectorizer.fit_transform(documents)
+
+lda = LatentDirichletAllocation(n_components=2)
+lda.fit(doc_term_matrix)
+
+for idx, topic in enumerate(lda.components_):
+    print(f"Topic {idx}:", [vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-5:]])
+
+
+---
+
+Practical 8: Named Entity Recognition (NER)
+
+import spacy
+from spacy import displacy
+
+nlp = spacy.load("en_core_web_sm")
+text = "On 5th June 2021, the Supreme Court of India ruled in favor of Infosys Ltd."
+
+doc = nlp(text)
+for ent in doc.ents:
+    print(ent.text, ent.label_)
+
+displacy.render(doc, style="ent", jupyter=False)
+
+
+---
+
+Practical 9: Extract Key Clauses from Contracts
+
+import re
+
+with open('contract.txt', 'r') as file:
+    contract_text = file.read()
+
+termination = re.findall(r'(termination.*?\.)', contract_text, flags=re.IGNORECASE | re.DOTALL)
+confidentiality = re.findall(r'(confidentiality.*?\.)', contract_text, flags=re.IGNORECASE | re.DOTALL)
+
+print("Termination Clauses:\n", termination)
+print("Confidentiality Clauses:\n", confidentiality)
+
+
+---
+
+Practical 10: Legal QA System with BERT
+
+from transformers import pipeline
+
+qa_pipeline = pipeline("question-answering", model="deepset/bert-base-cased-squad2")
+
+context = "The Supreme Court ruled in favor of the plaintiff, awarding damages."
+question = "Who did the Supreme Court rule in favor of?"
+
+result = qa_pipeline(question=question, context=context)
+print("Answer:", result['answer'])
+
+
+---
+
+Let me know if you need the datasets, sample outputs, or explanation notebooks!
 
